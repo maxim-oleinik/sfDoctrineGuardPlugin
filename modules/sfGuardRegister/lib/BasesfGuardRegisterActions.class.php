@@ -31,7 +31,7 @@ class BasesfGuardRegisterActions extends sfActions
       if ($this->form->isValid())
       {
         $user = $this->form->save();
-        $this->getUser()->signIn($user);
+        $this->getUser()->signIn($user, sfConfig::get('app_sf_guard_plugin_register_remember_me', false));
 
         $this->redirect(sfConfig::get('app_sf_guard_plugin_success_signin_url', 'homepage'));
       }

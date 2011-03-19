@@ -14,7 +14,8 @@ abstract class ActionsTest extends \myFunctionalTestCase
         $action = 'index',
         $route  = 'sf_guard_register',
         $selectorForm   = '#sf_guard_register_form',
-        $selectorSubmit = '#sf_guard_register_form_submit';
+        $selectorSubmit = '#sf_guard_register_form_submit',
+        $rememberMe = false;
 
 
     /**
@@ -107,6 +108,12 @@ abstract class ActionsTest extends \myFunctionalTestCase
             ->with('model')->check('sfGuardUser', $userData, 1, $found);
 
         $this->postRegisterChecks($submitData, $found[0]);
+
+        // RememberMe
+        $this->browser->newSession();
+        $this->browser
+            ->get($this->generateUrl($this->route))
+            ->with('user')->isAuthenticated($this->rememberMe);
     }
 
 
