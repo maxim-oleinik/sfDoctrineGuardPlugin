@@ -35,6 +35,16 @@ abstract class PluginsfGuardUser extends BasesfGuardUser
   }
 
   /**
+   * Returns user email address. Alias to getEmailAddress()
+   *
+   * @return string $email
+   */
+  public function getEmail()
+  {
+    return $this->get('email_address');
+  }
+
+  /**
    * Sets the user password.
    *
    * @param string $password
