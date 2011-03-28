@@ -1,0 +1,6 @@
+all:
+
+  sf_guard_plugin:
+    referer_cookie_name:          referer
+    referer_target_cookie_name:   referer_target
+    referer_cookie_ttl:           15552000   # 180 days in seconds
