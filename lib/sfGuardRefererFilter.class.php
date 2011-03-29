@@ -15,6 +15,30 @@
  */
 class sfGuardRefererFilter extends sfFilter
 {
+    const NULL = 'null';
+
+    protected
+        $cookieReferer,
+        $cookieTarget,
+        $cookieExpires;
+
+
+    /**
+     * Конструктор
+     */
+    public function __construct($context, $parameters = array())
+    {
+        parent::__construct($context, $parameters);
+
+        $this->cookieReferer = sfConfig::get('app_sf_guard_plugin_referer_cookie_name');
+        $this->cookieTarget  = sfConfig::get('app_sf_guard_plugin_referer_target_cookie_name');
+        $this->cookieExpires = time() + sfConfig::get('app_sf_guard_plugin_referer_cookie_ttl');
+
+        $context->getEventDispatcher()->connect('sfGuard.register_success', array($this, 'listenToRegisterEvent'));
+        $context->getEventDispatcher()->connect('sfGuard.signin_success', array($this, 'listenToSigninEvent'));
+    }
+
+
     /**
      * Executes the filter chain.
      *
@@ -22,22 +46,52 @@ class sfGuardRefererFilter extends sfFilter
      */
     public function execute($filterChain)
     {
-        $cookieName = sfConfig::get('app_sf_guard_plugin_referer_cookie_name');
-        $targetName = sfConfig::get('app_sf_guard_plugin_referer_target_cookie_name');
-        $ttl        = sfConfig::get('app_sf_guard_plugin_referer_cookie_ttl');
+        if ($this->isFirstCall()) {
+            $request = $this->context->getRequest();
 
-        $request = $this->context->getRequest();
+            // If no cookie
+            if (!$request->getCookie($this->cookieReferer)) {
+                $referer = $request->getReferer() ?: self::NULL;
 
-        // If no cookie
-        if (!$request->getCookie($cookieName)) {
-            $time = time() + $ttl;
-            $referer = $request->getReferer() ?: 'null';
-
-            $response = $this->context->getResponse();
-            $response->setCookie($cookieName, $referer, $time);
-            $response->setCookie($targetName, $request->getUri(), $time);
+                $response = $this->context->getResponse();
+                $response->setCookie($this->cookieReferer, $referer, $this->cookieExpires);
+                $response->setCookie($this->cookieTarget, $request->getUri(), $this->cookieExpires);
+            }
         }
 
         $filterChain->execute();
     }
+
+
+    /**
+     * Сохранить реферер в профиль пользователя
+     */
+    public function listenToRegisterEvent(sfEvent $event)
+    {
+        $profile = $event->getSubject()->getProfile();
+        $request = $this->getContext()->getRequest();
+
+        if ($referer = $request->getCookie($this->cookieReferer)) {
+
+            // Не сохранять null-строку
+            if (self::NULL != $referer) {
+                $profile->setReferer($referer);
+            }
+
+            $profile->setRefererTarget($request->getCookie($this->cookieTarget));
+        }
+    }
+
+
+    /**
+     * При авторизации пользователя очищать referer-cooke
+     */
+    public function listenToSigninEvent(sfEvent $event)
+    {
+        $response = $this->context->getResponse();
+
+        $response->setCookie($this->cookieReferer, self::NULL, $this->cookieExpires);
+        $response->setCookie($this->cookieTarget, null, 1);
+    }
+
 }

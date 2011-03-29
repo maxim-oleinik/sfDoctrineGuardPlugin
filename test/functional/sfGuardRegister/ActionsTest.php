@@ -15,7 +15,8 @@ abstract class ActionsTest extends \myFunctionalTestCase
         $route  = 'sf_guard_register',
         $selectorForm   = '#sf_guard_register_form',
         $selectorSubmit = '#sf_guard_register_form_submit',
-        $rememberMe = false;
+        $rememberMe = false,
+        $saveReferer = false;
 
 
     /**
@@ -125,6 +126,63 @@ abstract class ActionsTest extends \myFunctionalTestCase
      */
     public function postRegisterChecks(array $submitData, sfGuardUser $createdUser)
     {
+    }
+
+
+    /**
+     * Сохранить реферер
+     */
+    public function testSaveReferer()
+    {
+        $user = $this->_registerUserWithReferer($referer = 'http://referer.site.ru/', $target = 'http://some.site.ru/');
+
+        $this->assertEquals($referer, $user->getProfile()->getReferer(), 'Referer');
+        $this->assertEquals($target, $user->getProfile()->getRefererTarget(), 'Referer target');
+    }
+
+
+    /**
+     * Не сохранять 'null' как реферер
+     */
+    public function testDoNotSaveNullReferer()
+    {
+        $user = $this->_registerUserWithReferer($referer = 'null', $target = 'http://some.site.ru/');
+
+        $this->assertNull($user->getProfile()->getReferer(), 'Referer');
+        $this->assertEquals($target, $user->getProfile()->getRefererTarget(), 'Referer target');
+    }
+
+
+    /**
+     * Установить куку с реферером и зарегистрироваь пользователя
+     *
+     * @param  string $referer
+     * @param  string $target
+     * @return sfGuardUser
+     */
+    protected function _registerUserWithReferer($referer, $target)
+    {
+        if (!$this->saveReferer) {
+            $this->markTestSkipped();
+        }
+
+        $form = $this->createRegisterForm();
+
+        $refererCookieName = sfConfig::get('app_sf_guard_plugin_referer_cookie_name', 'RefererCookieName');
+        $refererTargetCookieName = sfConfig::get('app_sf_guard_plugin_referer_target_cookie_name', 'RefererTargetCookieName');
+
+        $this->browser->setCookie($refererCookieName, $referer, time()+200);
+        $this->browser->setCookie($refererTargetCookieName, $target, time()+200);
+
+        $this->browser
+            ->post($this->generateUrl($this->route), array($form->getName() => $this->getValidInput()))
+            ->with('form')->hasErrors(false)
+            // После авторизации кука очищается
+            ->with('user')->isAuthenticated(true)
+            ->with('response')->setsCookie($refererCookieName, 'null')
+            ->with('response')->setsCookie($refererTargetCookieName, null);
+
+        return \Doctrine_Core::getTable('sfGuardUser')->findAll()->getFirst();
     }
 
 }
