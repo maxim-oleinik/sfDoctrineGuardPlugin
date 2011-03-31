@@ -10,9 +10,8 @@ use sfGuardUser, sfConfig;
 abstract class ActionsTest extends \myFunctionalTestCase
 {
     protected
-        $module = 'sfGuardRegister',
-        $action = 'index',
-        $route  = 'sf_guard_register',
+        $routeShow      = array('sf_guard_register', 'sfGuardRegister', 'index'),
+        $routeSubmit    = array('sf_guard_register', 'sfGuardRegister', 'index'),
         $selectorForm   = '#sf_guard_register_form',
         $selectorSubmit = '#sf_guard_register_form_submit',
         $rememberMe = false,
@@ -48,6 +47,12 @@ abstract class ActionsTest extends \myFunctionalTestCase
     }
 
 
+    public function cleanInput(array $input)
+    {
+        return $input;
+    }
+
+
     /**
      * Редирект с регистрации если пользователь авторизован
      */
@@ -57,7 +62,7 @@ abstract class ActionsTest extends \myFunctionalTestCase
 
         $this->authenticateUser();
         $this->browser
-            ->getAndCheck($this->module, $this->action, $this->generateUrl($this->route), 302)
+            ->getAndCheck($this->routeShow[1], $this->routeShow[2], $this->generateUrl($this->routeShow[0]), 302)
             ->with('response')->checkRedirect(302, $this->generateUrl($redirectUrl));
     }
 
@@ -65,13 +70,13 @@ abstract class ActionsTest extends \myFunctionalTestCase
     /**
      * Регистрация
      */
-    public function testRegister()
+    public function testAutoRegister()
     {
         $form = $this->createRegisterForm();
 
         // Показать форму
         $this->browser
-            ->getAndCheck($this->module, $this->action, $this->generateUrl($this->route), 200)
+            ->getAndCheck($this->routeShow[1], $this->routeShow[2], $this->generateUrl($this->routeShow[0]), 200)
             ->with('response')->begin()
                 ->isValid(true)
                 ->checkForm($form)
@@ -80,7 +85,7 @@ abstract class ActionsTest extends \myFunctionalTestCase
         // Показать ошибки валидации
         $this->browser
             ->click($this->selectorSubmit)
-            ->with('request')->checkModuleAction($this->module, $this->action)
+            ->with('request')->checkModuleAction($this->routeSubmit[1], $this->routeSubmit[2])
             ->with('response')->begin()
                 ->isStatusCode(400)
                 ->checkElement("{$this->selectorForm} .error_list")
@@ -94,7 +99,7 @@ abstract class ActionsTest extends \myFunctionalTestCase
         // Регистрация
         $this->browser
             ->click("{$this->selectorForm}", array($form->getName() => $submitData = $this->getValidInput()))
-            ->with('request')->checkModuleAction($this->module, $this->action)
+            ->with('request')->checkModuleAction($this->routeSubmit[1], $this->routeSubmit[2])
             ->with('form')->begin()
                 ->isInstanceOf(get_class($form))
                 ->hasErrors(false)
@@ -102,18 +107,18 @@ abstract class ActionsTest extends \myFunctionalTestCase
             ->with('response')->checkRedirect(302, $this->generateUrl(sfConfig::get('app_sf_guard_plugin_success_signin_url')))
             ->with('user')->isAuthenticated(true);
 
-        // Создан пользователь и профиль
+        // Создан пользователь
         $userData = array_intersect_key($submitData, $form->getObject()->toArray(false));
         unset($userData['password']);
         $this->browser
-            ->with('model')->check('sfGuardUser', $userData, 1, $found);
+            ->with('model')->check('sfGuardUser', $this->cleanInput($userData), 1, $found);
 
         $this->postRegisterChecks($submitData, $found[0]);
 
         // RememberMe
         $this->browser->newSession();
         $this->browser
-            ->get($this->generateUrl($this->route))
+            ->get($this->generateUrl($this->routeShow[0]))
             ->with('user')->isAuthenticated($this->rememberMe);
     }
 
@@ -175,7 +180,7 @@ abstract class ActionsTest extends \myFunctionalTestCase
         $this->browser->setCookie($refererTargetCookieName, $target, time()+200);
 
         $this->browser
-            ->post($this->generateUrl($this->route), array($form->getName() => $this->getValidInput()))
+            ->post($this->generateUrl($this->routeSubmit[0]), array($form->getName() => $this->getValidInput()))
             ->with('form')->hasErrors(false)
             // После авторизации кука очищается
             ->with('user')->isAuthenticated(true)
