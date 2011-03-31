@@ -29,6 +29,7 @@ class sfGuardPromoteSuperAdminTask extends sfBaseTask
     ));
 
     $this->addOptions(array(
+      new sfCommandOption('no', null, sfCommandOption::PARAMETER_NONE, 'Demote from super admin'),
       new sfCommandOption('application', null, sfCommandOption::PARAMETER_OPTIONAL, 'The application name', null),
       new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED, 'The environment', 'dev'),
     ));
@@ -62,9 +63,13 @@ EOF;
       throw new sfException(sprintf('User identified by "%s" username does not exist or is not active.', $arguments['username']));
     }
 
-    $user->setIsSuperAdmin(true);
+    $user->setIsSuperAdmin(!$options['no']);
     $user->save();
 
-    $this->logSection('guard', sprintf('User identified by "%s" username has been promoted as super administrator', $arguments['username']));
+    if ($options['no']) {
+      $this->logSection('guard', sprintf('User identified by "%s" username has been DEMOTED from super administrator', $arguments['username']));
+    } else {
+      $this->logSection('guard', sprintf('User identified by "%s" username has been PROMOTED as super administrator', $arguments['username']));
+    }
   }
 }
