@@ -37,7 +37,7 @@ abstract class sfGuardRefererFilterTest extends \myFunctionalTestCase
         $this->browser
             ->get($this->generateUrl('homepage', $params))
             ->with('response')->setsCookie($this->refererCookieName, 'null')
-            ->with('response')->setsCookie($this->refererTargetCookieName, $this->generateUrl('homepage', $params, true));
+            ->with('response')->setsCookie($this->refererTargetCookieName, base64_encode($this->generateUrl('homepage', $params, true)));
     }
 
 
@@ -46,11 +46,11 @@ abstract class sfGuardRefererFilterTest extends \myFunctionalTestCase
      */
     public function testRefererNotEmpty()
     {
-        $this->browser->setHttpHeader('referer', $ref = 'http://some.site.ru/');
+        $this->browser->setHttpHeader('referer', $ref = "http://some.site.ru/?var1=1");
         $this->browser
             ->get($this->generateUrl('homepage'))
-            ->with('response')->setsCookie($this->refererCookieName, $ref)
-            ->with('response')->setsCookie($this->refererTargetCookieName, $this->generateUrl('homepage', array(), true));
+            ->with('response')->setsCookie($this->refererCookieName, base64_encode($ref))
+            ->with('response')->setsCookie($this->refererTargetCookieName, base64_encode($this->generateUrl('homepage', array(), true)));
     }
 
 

@@ -51,11 +51,11 @@ class sfGuardRefererFilter extends sfFilter
 
             // If no cookie
             if (!$request->getCookie($this->cookieReferer)) {
-                $referer = $request->getReferer() ?: self::NULL;
+                $referer = $request->getReferer() ? base64_encode($request->getReferer()) : self::NULL;
 
                 $response = $this->context->getResponse();
                 $response->setCookie($this->cookieReferer, $referer, $this->cookieExpires);
-                $response->setCookie($this->cookieTarget, $request->getUri(), $this->cookieExpires);
+                $response->setCookie($this->cookieTarget, base64_encode($request->getUri()), $this->cookieExpires);
             }
         }
 
@@ -75,10 +75,11 @@ class sfGuardRefererFilter extends sfFilter
 
             // Не сохранять null-строку
             if (self::NULL != $referer) {
-                $profile->setReferer($referer);
+                $profile->setReferer($this->_decodeValue($referer));
             }
 
-            $profile->setRefererTarget($request->getCookie($this->cookieTarget));
+            $target = $this->_decodeValue($request->getCookie($this->cookieTarget));
+            $profile->setRefererTarget($target);
         }
     }
 
@@ -92,6 +93,19 @@ class sfGuardRefererFilter extends sfFilter
 
         $response->setCookie($this->cookieReferer, self::NULL, $this->cookieExpires);
         $response->setCookie($this->cookieTarget, null, 1);
+    }
+
+
+    /**
+     * Расшифровать строку
+     *
+     * @param  string $value
+     * @return string
+     */
+    private function _decodeValue($value)
+    {
+        $result = base64_decode($value, true);
+        return $result ?: $value;
     }
 
 }

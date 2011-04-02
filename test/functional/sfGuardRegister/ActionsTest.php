@@ -139,7 +139,9 @@ abstract class ActionsTest extends \myFunctionalTestCase
      */
     public function testSaveReferer()
     {
-        $user = $this->_registerUserWithReferer($referer = 'http://referer.site.ru/', $target = 'http://some.site.ru/');
+        $referer = 'http://referer.site.ru/';
+        $target = 'http://some.site.ru/';
+        $user = $this->_registerUserWithReferer(base64_encode($referer), base64_encode($target));
 
         $this->assertEquals($referer, $user->getProfile()->getReferer(), 'Referer');
         $this->assertEquals($target, $user->getProfile()->getRefererTarget(), 'Referer target');
@@ -151,9 +153,24 @@ abstract class ActionsTest extends \myFunctionalTestCase
      */
     public function testDoNotSaveNullReferer()
     {
-        $user = $this->_registerUserWithReferer($referer = 'null', $target = 'http://some.site.ru/');
+        $target = 'http://some.site.ru/';
+        $user = $this->_registerUserWithReferer($referer = 'null', base64_encode($target));
 
         $this->assertNull($user->getProfile()->getReferer(), 'Referer');
+        $this->assertEquals($target, $user->getProfile()->getRefererTarget(), 'Referer target');
+    }
+
+
+    /**
+     * Сохранять ориганальное значение, если base64 не отработал
+     */
+    public function testSaveRefererEvenIfNotEncoded()
+    {
+        $referer = 'http://referer.site.ru/';
+        $target = 'http://some.site.ru/';
+        $user = $this->_registerUserWithReferer($referer, $target);
+
+        $this->assertEquals($referer, $user->getProfile()->getReferer(), 'Referer');
         $this->assertEquals($target, $user->getProfile()->getRefererTarget(), 'Referer target');
     }
 
