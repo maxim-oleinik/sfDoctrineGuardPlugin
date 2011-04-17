@@ -113,6 +113,6 @@ class sfGuardRouting
    */
   static public function addRouteForRegister(sfEvent $event)
   {
-    $event->getSubject()->prependRoute('sf_guard_register', new sfRoute('/guard/register', array('module' => 'sfGuardRegister', 'action' => 'index'))); 
+    $event->getSubject()->prependRoute('sf_guard_register', new sfRoute('/guard/register', array('module' => 'sfGuardRegister', 'action' => 'sfGuardRegister')));
   }
 }

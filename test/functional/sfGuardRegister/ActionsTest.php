@@ -10,8 +10,8 @@ use sfGuardUser, sfConfig;
 abstract class ActionsTest extends \myFunctionalTestCase
 {
     protected
-        $routeShow      = array('sf_guard_register', 'sfGuardRegister', 'index'),
-        $routeSubmit    = array('sf_guard_register', 'sfGuardRegister', 'index'),
+        $routeShow      = array('sf_guard_register', 'sfGuardRegister', 'sfGuardRegister'),
+        $routeSubmit    = array('sf_guard_register', 'sfGuardRegister', 'sfGuardRegister'),
         $selectorForm   = '#sf_guard_register_form',
         $selectorSubmit = '#sf_guard_register_form_submit',
         $rememberMe = false,
