@@ -163,15 +163,14 @@ sfGuardForgotPassword:
     symfony:
       form:   false
       filter: false
-  actAs: [Timestampable]
+  actAs:
+    Timestampable:
+      updated:
+        disabled: true
   columns:
-    user_id:
-      type: integer
-      notnull: true
-    unique_key: string(255)
-    expires_at:
-      type: timestamp
-      notnull: true
+    user_id:    { type: integer,    notnull: true }
+    unique_key: { type: string(32), notnull: true, fixed: true, unique: true }
+    expires_at: { type: timestamp,  notnull: true }
   relations:
     User:
       class: sfGuardUser
