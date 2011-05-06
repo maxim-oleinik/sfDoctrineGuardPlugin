@@ -21,8 +21,7 @@ class BasesfGuardRegisterAction extends sfAction
     public function execute($request)
     {
         if ($this->checkAuth && $this->getUser()->isAuthenticated()) {
-            $this->getUser()->setFlash('notice', 'You are already registered and signed in!');
-            $this->redirect(sfConfig::get('app_sf_guard_plugin_success_signin_url', 'homepage'));
+            $this->redirectIfAuthenticated();
         }
 
         $this->form = $this->createRegisterForm();
@@ -42,6 +41,13 @@ class BasesfGuardRegisterAction extends sfAction
         }
 
         return $this->showFormCallback();
+    }
+
+
+    public function redirectIfAuthenticated()
+    {
+        $this->getUser()->setFlash('notice', 'You are already registered and signed in!');
+        $this->redirect(sfConfig::get('app_sf_guard_plugin_success_signin_url', 'homepage'));
     }
 
 

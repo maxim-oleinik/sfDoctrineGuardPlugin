@@ -14,8 +14,19 @@ abstract class ActionsTest extends \myFunctionalTestCase
         $routeSubmit    = array('sf_guard_register', 'sfGuardRegister', 'sfGuardRegister'),
         $selectorForm   = '#sf_guard_register_form',
         $selectorSubmit = '#sf_guard_register_form_submit',
+        $redirect,
         $rememberMe = false,
         $saveReferer = false;
+
+
+    /**
+     * SetUp
+     */
+    public function setUp()
+    {
+        parent::setUp();
+        $this->redirect = $this->generateUrl(sfConfig::get('app_sf_guard_plugin_success_signin_url'));
+    }
 
 
     /**
@@ -58,12 +69,12 @@ abstract class ActionsTest extends \myFunctionalTestCase
      */
     public function testRedirectFromRegisterIfUserIsAuthneticated()
     {
-        $this->assertNotNull($redirectUrl = sfConfig::get('app_sf_guard_plugin_success_signin_url'));
+        $this->assertNotNull($this->redirect);
 
         $this->authenticateUser();
         $this->browser
             ->getAndCheck($this->routeShow[1], $this->routeShow[2], $this->generateUrl($this->routeShow[0]), 302)
-            ->with('response')->checkRedirect(302, $this->generateUrl($redirectUrl));
+            ->with('response')->checkRedirect(302, $this->redirect);
     }
 
 
@@ -104,7 +115,7 @@ abstract class ActionsTest extends \myFunctionalTestCase
                 ->isInstanceOf(get_class($form))
                 ->hasErrors(false)
             ->end()
-            ->with('response')->checkRedirect(302, $this->generateUrl(sfConfig::get('app_sf_guard_plugin_success_signin_url')))
+            ->with('response')->checkRedirect(302, $this->redirect)
             ->with('user')->isAuthenticated(true);
 
         // Создан пользователь
